@@ -1,10 +1,13 @@
 from flask import Blueprint, jsonify, request
 from bson.objectid import ObjectId
-from db import users_col, shops_col, products_col, orders_col, agents_col, finances_col
+from .db import users_col, shops_col, products_col, orders_col, agents_col, finances_col, audits_col
+from .utils import send_email
 import datetime
 import cloudinary
 import cloudinary.uploader
 import os
+import math
+import re
 
 bp = Blueprint("routes", __name__)
 
@@ -36,6 +39,32 @@ def to_jsonable(doc):
                 d[key] = value
         return d
     return doc
+
+def extract_shop_coordinates(location):
+    if not isinstance(location, dict):
+        return None
+
+    latitude = location.get("latitude", location.get("lat"))
+    longitude = location.get("longitude", location.get("lng"))
+
+    if latitude is None or longitude is None:
+        return None
+
+    try:
+        return float(latitude), float(longitude)
+    except (TypeError, ValueError):
+        return None
+
+def haversine_meters(lat1, lng1, lat2, lng2):
+    earth_radius_m = 6371000
+    phi1 = math.radians(lat1)
+    phi2 = math.radians(lat2)
+    delta_phi = math.radians(lat2 - lat1)
+    delta_lambda = math.radians(lng2 - lng1)
+
+    a = math.sin(delta_phi / 2) ** 2 + math.cos(phi1) * math.cos(phi2) * math.sin(delta_lambda / 2) ** 2
+    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+    return earth_radius_m * c
 
 # ---- Image Upload ----
 @bp.route("/upload/image", methods=["POST"])
@@ -69,8 +98,14 @@ def auth_register():
         user_role = payload.get("role", "customer")
         shop_id = None
         if user_role == "shop":
+            # Allow shop-specific metadata to be provided under payload['shop']
+            shop_payload = payload.get('shop') or {}
             shop_doc = {
-                "name": payload["name"],
+                "name": shop_payload.get('name') or payload.get('name'),
+                "type": shop_payload.get('type'),
+                "location": shop_payload.get('location'),
+                "description": shop_payload.get('description'),
+                "profileImage": shop_payload.get('profileImage'),
                 "status": "pending",
                 "created_at": datetime.datetime.utcnow(),
             }
@@ -190,6 +225,77 @@ def shops_products_get(shop_id):
         return jsonify({"error": "invalid shop id"}), 400
     docs = list(products_col.find({"shop_id": shop_id}))
     return jsonify(to_jsonable(docs)), 200
+
+@bp.route("/products/search", methods=["GET"])
+def products_search_get():
+    try:
+        query = (request.args.get("q") or request.args.get("query") or "").strip()
+        shop_id = request.args.get("shopId")
+        latitude = request.args.get("lat", type=float)
+        longitude = request.args.get("lng", type=float)
+        radius = request.args.get("radius", type=float)
+        limit = request.args.get("limit", default=48, type=int)
+
+        mongo_query = {}
+        if shop_id:
+            mongo_query["shop_id"] = shop_id
+        if query:
+            escaped = re.escape(query)
+            mongo_query["$or"] = [
+                {"name": {"$regex": escaped, "$options": "i"}},
+                {"description": {"$regex": escaped, "$options": "i"}},
+                {"category": {"$regex": escaped, "$options": "i"}},
+            ]
+
+        fetch_limit = max(limit * 5, 100)
+        product_docs = list(products_col.find(mongo_query).limit(fetch_limit))
+        shop_ids = list({doc.get("shop_id") for doc in product_docs if doc.get("shop_id")})
+        shops = {str(shop["_id"]): shop for shop in shops_col.find({"_id": {"$in": [oid(sid) for sid in shop_ids if oid(sid)]}})}
+
+        results = []
+        for product in product_docs:
+            shop = shops.get(str(product.get("shop_id")))
+            if not shop:
+                continue
+
+            shop_coordinates = extract_shop_coordinates(shop.get("location"))
+            distance_m = None
+            if latitude is not None and longitude is not None and shop_coordinates:
+                distance_m = haversine_meters(latitude, longitude, shop_coordinates[0], shop_coordinates[1])
+                if radius is not None and distance_m > radius:
+                    continue
+
+            stock = product.get("stock")
+            available = True
+            if stock is not None:
+                try:
+                    available = float(stock) > 0
+                except (TypeError, ValueError):
+                    available = bool(stock)
+
+            results.append({
+                "id": str(product.get("_id")),
+                "name": product.get("name"),
+                "description": product.get("description"),
+                "price": product.get("price"),
+                "stock": stock,
+                "available": available,
+                "images": product.get("images", []),
+                "category": product.get("category"),
+                "shopId": str(shop.get("_id")),
+                "shopName": shop.get("name"),
+                "shopLocation": shop.get("location"),
+                "distanceMeters": round(distance_m, 1) if distance_m is not None else None,
+            })
+
+        if latitude is not None and longitude is not None:
+            results.sort(key=lambda item: (item["distanceMeters"] is None, item["distanceMeters"] if item["distanceMeters"] is not None else float("inf")))
+        else:
+            results.sort(key=lambda item: (item.get("shopName") or "", item.get("name") or ""))
+
+        return jsonify(to_jsonable(results[:limit])), 200
+    except Exception as e:
+        return jsonify({"error": "Failed to search products", "details": str(e)}), 500
 
 @bp.route("/shops/<shop_id>/products", methods=["POST"])
 def shops_products_post(shop_id):
@@ -425,8 +531,72 @@ def admin_shops_approve(shop_id):
         {"$set": {"status": "approved", "updated_at": datetime.datetime.utcnow()}}
     )
 
-    s = shops_col.find_one({"_id": _id})
-    return jsonify(to_jsonable(s)), 200
+    # Persist audit log
+    shop = shops_col.find_one({"_id": _id})
+    audits_col.insert_one({
+        "action": "approve_shop",
+        "shop_id": shop_id,
+        "shop_name": shop.get("name"),
+        "admin": request.json.get("admin") if request.json else "system",
+        "timestamp": datetime.datetime.utcnow(),
+        "details": {"status": "open"},
+    })
+
+    # Notify shop owner by email (if present)
+    owner = users_col.find_one({"shop_id": shop_id})
+    if owner and owner.get("email"):
+        subject = "Your shop has been approved"
+        body = f"Hello {owner.get('name')},\n\nYour shop '{shop.get('name')}' has been approved by the admins and is now live on the platform. You can sign in and access the Shop Dashboard to list products.\n\nThanks,\nNear2Door Team"
+        try:
+            send_email(owner.get("email"), subject, body)
+        except Exception as e:
+            print("Failed to send approval email:", e)
+
+    return jsonify(to_jsonable(shop)), 200
+
+
+@bp.route("/admin/shops/<shop_id>/reject", methods=["PUT"])
+def admin_shops_reject(shop_id):
+    _id = oid(shop_id)
+    if not _id:
+        return jsonify({"error": "invalid shop id"}), 400
+
+    payload = request.json or {}
+    reason = payload.get('reason')
+
+    result = shops_col.update_one(
+        {"_id": _id},
+        {"$set": {"status": "rejected", "rejection_reason": reason, "updated_at": datetime.datetime.utcnow()}}
+    )
+    if result.matched_count == 0:
+        return jsonify({"error": "Shop not found"}), 404
+
+    # Also update the corresponding user status to "rejected"
+    users_col.update_one(
+        {"shop_id": shop_id},
+        {"$set": {"status": "rejected", "updated_at": datetime.datetime.utcnow()}}
+    )
+
+    shop = shops_col.find_one({"_id": _id})
+    audits_col.insert_one({
+        "action": "reject_shop",
+        "shop_id": shop_id,
+        "shop_name": shop.get("name"),
+        "admin": request.json.get("admin") if request.json else "system",
+        "timestamp": datetime.datetime.utcnow(),
+        "details": {"reason": reason},
+    })
+
+    owner = users_col.find_one({"shop_id": shop_id})
+    if owner and owner.get("email"):
+        subject = "Your shop registration was not approved"
+        body = f"Hello {owner.get('name')},\n\nWe reviewed your shop '{shop.get('name')}' registration and it was not approved. Reason: {reason or 'Not specified'}. Please update your application and re-submit or contact support.\n\nThanks,\nNear2Door Team"
+        try:
+            send_email(owner.get("email"), subject, body)
+        except Exception as e:
+            print("Failed to send rejection email:", e)
+
+    return jsonify(to_jsonable(shop)), 200
 
 @bp.route("/admin/finances", methods=["GET"])
 def admin_finances_get():

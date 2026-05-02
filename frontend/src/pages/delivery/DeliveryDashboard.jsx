@@ -3,7 +3,6 @@ import { useAuth } from '../../context/AuthContext';
 import api from '../../api/api';
 import Button from '../../components/UI/Button';
 import MapTracker from '../../components/UI/MapTracker';
-import { AnimatePresence, motion } from 'framer-motion';
 
 const DeliveryDashboard = () => {
   const { user } = useAuth();
@@ -169,30 +168,21 @@ const DeliveryDashboard = () => {
                 </div>
 
                 {/* Map Tracker with animation */}
-                <AnimatePresence>
-                  {activeMapOrder === order.id &&
-                    currentMapOrder?.customer_location &&
-                    agentLocation && (
-                      <motion.div
-                        key={`map-${order.id}`}
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: 'auto', opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.4, ease: 'easeInOut' }}
-                        className="overflow-hidden mt-6"
-                      >
-                        <div className="relative w-full overflow-hidden rounded-2xl shadow-xl border border-gray-200 bg-white">
-                          <div className="aspect-[4/3] sm:aspect-[16/9]">
-                            <MapTracker
-                              mapId={`map-${order.id}`}
-                              agentLocation={agentLocation}
-                              customerLocation={currentMapOrder.customer_location}
-                            />
-                          </div>
+                {activeMapOrder === order.id &&
+                  currentMapOrder?.customer_location &&
+                  agentLocation && (
+                    <div className="mt-6 overflow-hidden transition-all duration-300 ease-in-out">
+                      <div className="relative w-full overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-xl">
+                        <div className="aspect-[4/3] sm:aspect-[16/9]">
+                          <MapTracker
+                            mapId={`map-${order.id}`}
+                            agentLocation={agentLocation}
+                            customerLocation={currentMapOrder.customer_location}
+                          />
                         </div>
-                      </motion.div>
-                    )}
-                </AnimatePresence>
+                      </div>
+                    </div>
+                  )}
               </div>
             ))
           )}

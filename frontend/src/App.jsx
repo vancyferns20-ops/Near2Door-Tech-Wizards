@@ -28,6 +28,33 @@ function App() {
     setPage(path);
     setPageProps(props);
   };
+  // Normalize an incoming product/item into the cart format and merge duplicates
+  const addToCart = (item) => {
+    if (!item) return;
+    const id = item.id || item._id || item.productId || null;
+    if (!id) return;
+
+    const shopId = item.shopId || item.shop_id || item.shop?.id || item.shop?._id || null;
+    const cartItem = {
+      id,
+      name: item.name || item.title || 'Product',
+      price: Number(item.price ?? item.cost ?? 0),
+      quantity: Number(item.quantity ?? 1),
+      images: item.images || item.photos || [],
+      shop_id: shopId,
+      shopName: item.shopName || item.shop?.name || item.vendorName || '',
+    };
+
+    setCart((prev) => {
+      // If same product exists, increment quantity
+      const existing = prev.find((p) => p.id === cartItem.id);
+      if (existing) {
+        return prev.map((p) => (p.id === cartItem.id ? { ...p, quantity: Number(p.quantity || 1) + Number(cartItem.quantity || 1) } : p));
+      }
+
+      return [...prev, cartItem];
+    });
+  };
 
   const renderPage = () => {
     const userRole = user ? user.role : 'guest';
@@ -76,8 +103,8 @@ function App() {
       case 'manage-orders': return <ManageOrders onNavigate={onNavigate} />;
       case 'manage-shop-profile': return <ManageShopProfile onNavigate={onNavigate} />;
       case 'customer-dashboard': return <CustomerDashboard onNavigate={onNavigate} />;
-      case 'browse-shops': return <BrowseShops onNavigate={onNavigate} onAddToCart={(item) => setCart([...cart, item])} />;
-      case 'shop-products': return <ShopProducts onNavigate={onNavigate} shopId={pageProps.shopId} onAddToCart={(item) => setCart([...cart, item])} />;
+      case 'browse-shops': return <BrowseShops onNavigate={onNavigate} onAddToCart={addToCart} />;
+      case 'shop-products': return <ShopProducts onNavigate={onNavigate} shopId={pageProps.shopId} onAddToCart={addToCart} />;
       case 'agent-dashboard': return <DeliveryDashboard onNavigate={onNavigate} />;
       case 'admin-dashboard': return <AdminDashboard onNavigate={onNavigate} />;
       case 'cart': return <Cart cart={cart} onUpdateCart={setCart} onNavigate={onNavigate} />;
@@ -88,12 +115,12 @@ function App() {
   return (
     <>
       <style>{`
-        body { font-family: 'Inter', sans-serif; }
+        body { font-family: 'Inter', 'Poppins', sans-serif; background: #0f172a; }
       `}</style>
       <script src="https://cdn.tailwindcss.com"></script>
-      <div className="min-h-screen bg-slate-900 flex flex-col overflow-hidden">
+      <div className="min-h-screen bg-slate-950 text-white flex flex-col">
         <Header onNavigate={onNavigate} user={user} onLogout={logout} />
-        <main className="flex-grow px-2 sm:px-4 py-4 sm:py-8">
+        <main className="flex-grow bg-slate-950">
           {renderPage()}
         </main>
         <Footer />

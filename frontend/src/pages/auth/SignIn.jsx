@@ -55,9 +55,9 @@ const SignIn = ({ onNavigate }) => {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen p-4">
-      <div className="w-full max-w-sm bg-white rounded-2xl shadow-2xl p-8">
-        <h2 className="text-3xl font-bold text-center text-gray-900 mb-8">
+    <div className="flex min-h-screen items-center justify-center bg-slate-900 p-4">
+      <div className="w-full max-w-sm rounded-2xl bg-slate-800 p-8 shadow-2xl">
+        <h2 className="mb-8 text-center text-3xl font-bold text-lime-400">
           Sign In
         </h2>
         <form onSubmit={handleSubmit(onSubmit)}>
@@ -85,11 +85,11 @@ const SignIn = ({ onNavigate }) => {
           </Button>
         </form>
         <div className="mt-6 text-center">
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-gray-400">
             Don't have an account?{' '}
             <button
               onClick={() => onNavigate('signup')}
-              className="text-lime-600 hover:underline font-semibold"
+              className="font-semibold text-lime-400 hover:text-lime-300"
             >
               Sign Up
             </button>

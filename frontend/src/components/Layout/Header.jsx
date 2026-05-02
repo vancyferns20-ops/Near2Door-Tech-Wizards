@@ -1,17 +1,25 @@
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useMemo, useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 
-// ShopLogo (unchanged)
-const ShopLogo = ({ name, imageUrl, onClick }) => {
-  const initials = name ? name[0].toUpperCase() : 'S';
+const BrandMark = ({ size = 'md' }) => {
+  const sizes = size === 'sm' ? 'h-9 w-9 text-xs' : 'h-11 w-11 text-sm';
   return (
-    <div
-      onClick={onClick}
-      className="relative w-12 h-12 flex items-center justify-center rounded-full overflow-hidden font-bold text-lg text-white bg-lime-600 border-2 border-lime-400 cursor-pointer"
-    >
+    <span className={`flex ${sizes} items-center justify-center rounded-2xl bg-[linear-gradient(135deg,#0f172a,#3b82f6_55%,#a3e635)] font-black text-white shadow-[0_12px_30px_rgba(15,23,42,0.28)]`}>
+      N2D
+    </span>
+  );
+};
+
+const Avatar = ({ name, imageUrl }) => {
+  const initials = useMemo(() => {
+    const parts = (name || 'User').trim().split(/\s+/).filter(Boolean);
+    return parts.slice(0, 2).map((part) => part[0]?.toUpperCase()).join('') || 'U';
+  }, [name]);
+
+  return (
+    <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border border-slate-700 bg-slate-800 text-sm font-black text-white">
       {imageUrl ? (
-        <img src={imageUrl} alt="Shop Profile" className="w-full h-full object-cover" />
+        <img src={imageUrl} alt={name || 'Profile'} className="h-full w-full object-cover" />
       ) : (
         <span>{initials}</span>
       )}
@@ -21,7 +29,6 @@ const ShopLogo = ({ name, imageUrl, onClick }) => {
 
 const Header = ({ onNavigate, onLogout }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isProfileOpen, setIsProfileOpen] = useState(false);
   const { user, shopProfile } = useAuth();
   const role = user?.role || 'guest';
 
@@ -55,169 +62,151 @@ const Header = ({ onNavigate, onLogout }) => {
   const handleLinkClick = (path) => {
     onNavigate(path);
     setIsMenuOpen(false);
-    setIsProfileOpen(false);
   };
 
-  const getUserProfile = () => {
+  const profile = useMemo(() => {
     if (user?.role === 'shop') {
-      return { name: shopProfile?.name, imageUrl: shopProfile?.profileImage };
-    } else {
-      return { name: user?.name || user?.email, imageUrl: null };
+      return {
+        name: shopProfile?.name || user?.name || 'Shop',
+        imageUrl: shopProfile?.profileImage || null,
+      };
     }
-  };
-  const profile = getUserProfile();
+
+    return {
+      name: user?.name || user?.email || 'Guest',
+      imageUrl: null,
+    };
+  }, [shopProfile?.name, shopProfile?.profileImage, user?.email, user?.name, user?.role]);
 
   return (
-    <header className="bg-gray-900 text-white shadow-2xl sticky top-0 z-50">
-      <nav className="flex items-center justify-between flex-wrap p-6 max-w-7xl mx-auto">
-        {/* Logo */}
-        <div className="flex items-center flex-shrink-0">
-          <button onClick={() => onNavigate('landing')} className="flex items-center">
-            <span className="font-extrabold text-2xl tracking-tight text-lime-400 drop-shadow-lg">
-              Near2Door
-            </span>
-          </button>
+    <header className="sticky top-0 z-50 border-b border-slate-800/80 bg-slate-950/90 text-white shadow-[0_16px_40px_rgba(2,6,23,0.28)] backdrop-blur-xl">
+      <nav className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">
+        <button onClick={() => onNavigate('landing')} className="flex items-center gap-3 text-left">
+          <BrandMark />
+          <span className="hidden sm:block leading-tight">
+            <span className="block text-[0.62rem] font-semibold uppercase tracking-[0.35em] text-slate-400">Hyperlocal Speed</span>
+            <span className="block text-lg font-black tracking-tight text-white">Near2Door</span>
+          </span>
+        </button>
+
+        <div className="hidden items-center gap-2 lg:flex">
+          {links.map((link) => (
+            <button
+              key={link.path}
+              onClick={() => handleLinkClick(link.path)}
+              className="rounded-full px-4 py-2 text-sm font-semibold text-slate-300 transition hover:bg-white/6 hover:text-white"
+            >
+              {link.name}
+            </button>
+          ))}
         </div>
 
-        {/* Mobile toggle */}
-        <div className="block lg:hidden">
-          <button
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="flex items-center px-3 py-2 border rounded text-lime-400 border-lime-400 hover:text-lime-400 hover:border-lime-400 transition"
-          >
-            <svg
-              className="fill-current h-5 w-5"
-              viewBox="0 0 20 20"
-              xmlns="http://www.w3.org/2000/svg"
+        <div className="hidden items-center gap-3 lg:flex">
+          {user ? (
+            <>
+              <div className="flex items-center gap-3 rounded-full border border-slate-800 bg-white/5 px-3 py-2">
+                <Avatar name={profile.name} imageUrl={profile.imageUrl} />
+                <div className="leading-tight">
+                  <div className="max-w-40 truncate text-sm font-semibold text-white">{profile.name}</div>
+                  <div className="text-xs uppercase tracking-[0.28em] text-slate-400">{user.role}</div>
+                </div>
+              </div>
+              <button
+                onClick={onLogout}
+                className="rounded-full border border-rose-500/30 bg-rose-500/10 px-4 py-2 text-sm font-semibold text-rose-200 transition hover:bg-rose-500/20 hover:text-white"
+              >
+                Logout
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                onClick={() => handleLinkClick('signin')}
+                className="rounded-full border border-slate-700 bg-white/5 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/10"
+              >
+                Sign In
+              </button>
+              <button
+                onClick={() => handleLinkClick('signup')}
+                className="rounded-full bg-[linear-gradient(135deg,#3b82f6,#a3e635)] px-4 py-2 text-sm font-black text-slate-950 shadow-[0_14px_30px_rgba(59,130,246,0.2)] transition hover:brightness-110"
+              >
+                Sign Up
+              </button>
+            </>
+          )}
+        </div>
+
+        <div className="flex items-center gap-2 lg:hidden">
+          {user ? (
+            <button
+              onClick={onLogout}
+              className="rounded-full border border-slate-700 bg-white/5 px-3 py-2 text-xs font-semibold text-white"
             >
+              Logout
+            </button>
+          ) : (
+            <button
+              onClick={() => handleLinkClick('signin')}
+              className="rounded-full border border-slate-700 bg-white/5 px-3 py-2 text-xs font-semibold text-white"
+            >
+              Sign In
+            </button>
+          )}
+          <button
+            onClick={() => setIsMenuOpen((open) => !open)}
+            className="rounded-full border border-slate-700 bg-white/5 p-2 text-white"
+            aria-label="Toggle menu"
+          >
+            <svg className="h-5 w-5 fill-current" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
               <title>Menu</title>
               <path d="M0 3h20v2H0V3zm0 6h20v2H0V9zm0 6h20v2H0v-2z" />
             </svg>
           </button>
         </div>
+      </nav>
 
-        {/* Links and User Controls */}
-        <div className="hidden lg:flex lg:items-center lg:w-auto w-full">
-          {/* Desktop Links */}
-          <div className="text-base flex flex-row items-center space-x-6 font-bold flex-grow justify-center">
-            {links.map((link, index) => (
+      {isMenuOpen ? (
+        <div className="border-t border-slate-800 bg-slate-950 px-4 pb-5 pt-4 lg:hidden">
+          {user ? (
+            <div className="mb-4 flex items-center gap-3 rounded-2xl border border-slate-800 bg-white/5 px-4 py-3">
+              <Avatar name={profile.name} imageUrl={profile.imageUrl} />
+              <div>
+                <div className="text-sm font-semibold text-white">{profile.name}</div>
+                <div className="text-xs uppercase tracking-[0.28em] text-slate-400">{user.role}</div>
+              </div>
+            </div>
+          ) : null}
+
+          <div className="grid gap-2">
+            {links.map((link) => (
               <button
-                key={index}
+                key={link.path}
                 onClick={() => handleLinkClick(link.path)}
-                className="text-white font-bold px-4 py-2 rounded transition duration-300 hover:text-lime-400 hover:bg-slate-800 focus:outline-none"
+                className="rounded-2xl border border-slate-800 bg-white/5 px-4 py-3 text-left text-sm font-semibold text-slate-200 transition hover:bg-white/10 hover:text-white"
               >
                 {link.name}
               </button>
             ))}
           </div>
 
-          {/* Desktop User Controls */}
-          <div className="flex items-center space-x-4">
-            {user ? (
-              <>
-                <span className="text-sm px-2 py-1 bg-lime-400 text-slate-900 rounded-full font-bold">
-                  {user.role}
-                </span>
-                <div className="relative">
-                  <ShopLogo
-                    name={profile.name}
-                    imageUrl={profile.imageUrl}
-                    onClick={() => setIsProfileOpen(!isProfileOpen)}
-                  />
-                  {isProfileOpen && (
-                    <div className="absolute right-0 mt-2 w-48 bg-white text-gray-800 rounded-lg shadow-lg py-2 z-50">
-                      {role === 'shop' && (
-                        <button
-                          onClick={() => handleLinkClick('manage-shop-profile')}
-                          className="block w-full text-left px-4 py-2 hover:bg-lime-100"
-                        >
-                          Profile
-                        </button>
-                      )}
-                      <button
-                        onClick={onLogout}
-                        className="block w-full text-left px-4 py-2 hover:bg-red-100 text-red-600"
-                      >
-                        Logout
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </>
-            ) : (
-              <>
-                <button
-                  onClick={() => handleLinkClick('signin')}
-                  className="inline-block text-sm px-4 py-2 border-2 rounded-lg text-white border-lime-400 bg-slate-900 hover:text-lime-400 hover:border-lime-400 hover:bg-slate-800 font-bold transition duration-300"
-                >
-                  Sign In
-                </button>
-                <button
-                  onClick={() => handleLinkClick('signup')}
-                  className="inline-block text-sm px-4 py-2 border-2 rounded-lg text-white border-lime-400 bg-lime-600 hover:text-lime-400 hover:border-lime-400 hover:bg-lime-700 font-bold transition duration-300"
-                >
-                  Sign Up
-                </button>
-              </>
-            )}
-          </div>
-        </div>
-      </nav>
-
-      {/* Mobile Dropdown */}
-      <AnimatePresence>
-        {isMenuOpen && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.3 }}
-            className="lg:hidden bg-slate-900 shadow-lg px-6 pb-6"
-          >
-            <div className="flex flex-col items-center space-y-4 font-bold">
-              {links.map((link, index) => (
-                <button
-                  key={index}
-                  onClick={() => handleLinkClick(link.path)}
-                  className="w-full text-center text-white font-bold px-4 py-2 rounded transition duration-300 hover:text-lime-400 hover:bg-slate-800"
-                >
-                  {link.name}
-                </button>
-              ))}
-
-              {/* Mobile User Controls */}
-              {user ? (
-                <>
-                  <span className="text-sm px-2 py-1 bg-lime-400 text-slate-900 rounded-full font-bold">
-                    {user.role}
-                  </span>
-                  <button
-                    onClick={onLogout}
-                    className="w-full text-center px-4 py-2 text-red-600 hover:bg-red-100 rounded"
-                  >
-                    Logout
-                  </button>
-                </>
-              ) : (
-                <>
-                  <button
-                    onClick={() => handleLinkClick('signin')}
-                    className="w-full text-center px-4 py-2 border-2 rounded-lg text-white border-lime-400 bg-slate-900 hover:text-lime-400 hover:border-lime-400 hover:bg-slate-800 font-bold transition duration-300"
-                  >
-                    Sign In
-                  </button>
-                  <button
-                    onClick={() => handleLinkClick('signup')}
-                    className="w-full text-center px-4 py-2 border-2 rounded-lg text-white border-lime-400 bg-lime-600 hover:text-lime-400 hover:border-lime-400 hover:bg-lime-700 font-bold transition duration-300"
-                  >
-                    Sign Up
-                  </button>
-                </>
-              )}
+          {!user ? (
+            <div className="mt-4 grid grid-cols-2 gap-2">
+              <button
+                onClick={() => handleLinkClick('signin')}
+                className="rounded-2xl border border-slate-700 bg-white/5 px-4 py-3 text-sm font-semibold text-white"
+              >
+                Sign In
+              </button>
+              <button
+                onClick={() => handleLinkClick('signup')}
+                className="rounded-2xl bg-[linear-gradient(135deg,#3b82f6,#a3e635)] px-4 py-3 text-sm font-black text-slate-950"
+              >
+                Sign Up
+              </button>
             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+          ) : null}
+        </div>
+      ) : null}
     </header>
   );
 };

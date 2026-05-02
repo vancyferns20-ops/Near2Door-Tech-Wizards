@@ -1,4 +1,4 @@
-const API_BASE_URL = 'https://near2door-tech-wizards.onrender.com';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://didactic-parakeet-jxv5j6j96672p4jx-5000.app.github.dev';
 
 const api = {
   // ---------------------
@@ -117,6 +117,24 @@ const api = {
     }
   },
 
+  searchProducts: async (query, options = {}) => {
+    try {
+      const params = new URLSearchParams();
+      if (query) params.set('q', query);
+      if (options.shopId) params.set('shopId', String(options.shopId));
+      if (options.lat !== undefined) params.set('lat', String(options.lat));
+      if (options.lng !== undefined) params.set('lng', String(options.lng));
+      if (options.radius !== undefined) params.set('radius', String(options.radius));
+
+      const response = await fetch(`${API_BASE_URL}/products/search?${params.toString()}`);
+      if (!response.ok) throw new Error('Failed to search products');
+      return response.json();
+    } catch (err) {
+      console.error('searchProducts error:', err);
+      return [];
+    }
+  },
+
   addProduct: async (shopId, productData) => {
     const token = localStorage.getItem('token');
     try {
@@ -231,6 +249,17 @@ const api = {
     } catch (err) {
       console.error('approveShop error:', err);
       return false;
+    }
+  },
+
+  rejectShop: async (shopId, reason) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/admin/shops/${shopId}/reject`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ reason }) });
+      if (!response.ok) throw new Error('Failed to reject shop');
+      return response.json();
+    } catch (err) {
+      console.error('rejectShop error:', err);
+      return null;
     }
   },
 

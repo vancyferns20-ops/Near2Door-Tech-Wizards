@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../api/api';
 import Button from '../../components/UI/Button';
+import SearchBar from '../../components/UI/SearchBar';
 
 // ProductCard component
 const ProductCard = ({ product, onAddToCart }) => {
@@ -44,6 +45,16 @@ const ShopProducts = ({ onNavigate, shopId, onAddToCart }) => {
   const [error, setError] = useState(null);
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const filteredProducts = products.filter((product) => {
+    const query = searchQuery.trim().toLowerCase();
+    if (!query) return true;
+
+    return [product.name, product.description, product.category]
+      .filter(Boolean)
+      .some((value) => String(value).toLowerCase().includes(query));
+  });
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -96,9 +107,18 @@ const ShopProducts = ({ onNavigate, shopId, onAddToCart }) => {
         Browse the available products from your selected shop.
       </p>
 
+      <div className="mb-6 max-w-xl">
+        <SearchBar
+          value={searchQuery}
+          onChange={setSearchQuery}
+          onClear={() => setSearchQuery('')}
+          placeholder="Search products in this shop"
+        />
+      </div>
+
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
-        {products.length > 0 ? (
-          products.map((product) => (
+        {filteredProducts.length > 0 ? (
+          filteredProducts.map((product) => (
             <ProductCard 
               key={product.id} 
               product={product} 
@@ -106,7 +126,11 @@ const ShopProducts = ({ onNavigate, shopId, onAddToCart }) => {
             />
           ))
         ) : (
-          <p className="text-gray-400 col-span-full">No products available at this time.</p>
+          <p className="text-gray-400 col-span-full">
+            {searchQuery
+              ? `No products matched “${searchQuery}”. Try another keyword.`
+              : 'No products available at this time.'}
+          </p>
         )}
       </div>
 

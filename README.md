@@ -72,6 +72,20 @@
    ```
    The backend runs at `http://127.0.0.1:5000`.
 
+### Optional Backend Email Setup
+
+If you want shop approval/rejection emails to be sent instead of only logged, set these backend environment variables in `backend/.env`:
+
+```sh
+SMTP_HOST=smtp.example.com
+SMTP_PORT=587
+SMTP_USER=your-email@example.com
+SMTP_PASS=your-app-password
+FROM_EMAIL=your-email@example.com
+```
+
+If these values are not set, the app keeps working and prints the email content to the backend logs instead.
+
 ### Frontend (React + Vite)
 
 1. **Install dependencies:**

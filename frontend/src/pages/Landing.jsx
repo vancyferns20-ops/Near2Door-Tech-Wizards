@@ -1,153 +1,156 @@
 import React from 'react';
 
 const Landing = ({ onNavigate }) => {
+  const quickCategories = [
+    'Fresh Produce',
+    'Builder Tools',
+    'Daily Staples',
+    'Hardware Picks',
+    'Dairy Express',
+    'Paint & Fix',
+    'Snacks Now',
+    'Plumbing Kits',
+  ];
+
+  const produceItems = [
+    { emoji: '🥭', title: 'Mango Burst', note: 'Sweet, sun-ripened, ready now', tone: 'from-amber-400 to-orange-500' },
+    { emoji: '🍅', title: 'Tomato Pop', note: 'Vibrant vine-fresh energy', tone: 'from-rose-500 to-red-500' },
+    { emoji: '🥦', title: 'Green Crunch', note: 'Crisp, bright, nutrient-packed', tone: 'from-lime-400 to-emerald-500' },
+    { emoji: '🫐', title: 'Berry Rush', note: 'Cold, juicy, and colorful', tone: 'from-sky-400 to-blue-600' },
+  ];
+
+  const toolItems = [
+    { icon: '🔨', title: 'Hammer', detail: 'Heavy-duty fixes' },
+    { icon: '📏', title: 'Tape', detail: 'Measure with precision' },
+    { icon: '🪛', title: 'Driver', detail: 'Fast assembly' },
+    { icon: '🧰', title: 'Kit', detail: 'Grab and go' },
+  ];
+
   return (
-    <div className="min-h-screen flex flex-col justify-center items-center bg-slate-900 text-white font-sans">
-      {/* Hero Section */}
-      <div className="w-full max-w-7xl mx-auto text-center py-16 md:py-20 lg:py-24 px-6 md:px-10 lg:px-16 rounded-3xl bg-slate-800 shadow-2xl ring-2 ring-lime-500/20 mb-12 md:mb-16 relative overflow-hidden">
-        <div
-          className="absolute top-0 left-0 w-full h-full bg-cover bg-center opacity-10"
-          style={{
-            backgroundImage:
-              'url("https://images.unsplash.com/photo-1599879796030-2442478a8461?ixlib=rb-4.0.3&q=80&w=1080")',
-          }}
-        ></div>
-        <div className="relative z-10">
-          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold text-lime-400 mb-4 md:mb-6 leading-tight">
-            Groceries & Essentials,{" "}
-            <br className="hidden sm:inline" />Delivered by People You Know.
+    <div className="min-h-screen bg-slate-900 text-white">
+      <section className="mx-auto max-w-7xl px-4 pb-20 pt-12 sm:px-6 sm:pb-24 sm:pt-16 lg:px-8 lg:pb-28 lg:pt-20">
+        <div className="mb-8 text-center">
+          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-lime-400/30 bg-lime-400/10 px-4 py-2 text-sm font-semibold text-lime-300">
+            <span className="h-2.5 w-2.5 rounded-full bg-lime-400" />
+            Hyperlocal Speed for groceries and materials
+          </div>
+
+          <h1 className="mb-6 text-5xl font-black tracking-tight text-lime-400 sm:text-6xl lg:text-7xl" style={{ fontFamily: 'Poppins, Inter, sans-serif' }}>
+            Groceries and tools.
+            <br className="hidden sm:inline" />
+            <span className="mt-2 block text-white">Delivered in 15 mins.</span>
           </h1>
-          <p className="text-base sm:text-lg md:text-xl text-gray-300 max-w-4xl mx-auto mb-8 md:mb-10 font-light">
-            Near2Door isn’t just a service; it’s a movement. We deliver with
-            love, from your trusted local vendors, right to your doorstep in
-            minutes. In Goa, India.
+          
+          <p className="mx-auto mb-8 max-w-2xl text-lg leading-8 text-gray-300">
+            Near2Door connects you with trusted local shops. No middlemen, no delays.
+            Just your community's goods, delivered fast.
           </p>
-          <div className="flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-6">
+
+          <div className="flex flex-col gap-4 sm:flex-row sm:justify-center sm:gap-6">
             <button
-              onClick={() => onNavigate("signup")}
-              className="px-8 py-4 md:px-10 md:py-5 bg-lime-600 text-white font-bold text-base md:text-lg rounded-full shadow-xl transition-all duration-300 transform hover:bg-lime-700 hover:-translate-y-1 hover:scale-105 focus:outline-none focus:ring-4 focus:ring-lime-500/50"
+              onClick={() => onNavigate('signup')}
+              className="rounded-full bg-[linear-gradient(135deg,#3b82f6,#a3e635)] px-8 py-4 text-lg font-bold text-white shadow-[0_20px_40px_rgba(59,130,246,0.3)] transition hover:-translate-y-1"
             >
-              Get Started Today
+              Get Started
             </button>
             <button
-              onClick={() => onNavigate("how-it-works")}
-              className="px-8 py-4 md:px-10 md:py-5 bg-slate-900 text-lime-400 font-bold text-base md:text-lg rounded-full shadow-xl border-2 border-lime-500/40 transition-all duration-300 transform hover:bg-slate-800 hover:-translate-y-1 hover:scale-105 focus:outline-none focus:ring-4 focus:ring-lime-500/40"
+              onClick={() => onNavigate('how-it-works')}
+              className="rounded-full border-2 border-lime-400 bg-transparent px-8 py-4 text-lg font-bold text-lime-400 transition hover:-translate-y-1 hover:bg-lime-400/10"
             >
-              How It Works
+              Learn More
             </button>
           </div>
         </div>
-      </div>
 
-      {/* Who We Serve Section */}
-      <div className="w-full max-w-7xl mx-auto mb-12 md:mb-16 px-6">
-        <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-center text-lime-400 mb-8 md:mb-12">
-          Who We Serve in Goa
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-10">
-          {[
-            {
-              title: "Customers",
-              desc: "Get your daily essentials from your trusted local shops in Goa — without stepping out. Order from your favorite vendor, and we’ll bring it near to your door with a smile.",
-              icon: "shopping-bag",
-            },
-            {
-              title: "Shops",
-              desc: "Digitize your Goa store in minutes — no apps, no tech stress. Serve more customers, track orders, and grow your reach across your area with a low monthly membership.",
-              icon: "store",
-            },
-            {
-              title: "Delivery Agents",
-              desc: "Earn on your schedule. Whether you’re a student or someone looking for part-time work in Goa, Near2Door lets you deliver in your neighborhood and earn weekly.",
-              icon: "bike",
-            },
-          ].map((item, idx) => (
-            <div
-              key={idx}
-              className="bg-slate-800 p-8 md:p-10 rounded-3xl shadow-xl ring-1 ring-lime-500/20 transition-transform duration-300 hover:scale-[1.02] hover:shadow-2xl"
-            >
-              <div className="flex items-center justify-center text-lime-400 mb-4 md:mb-6 text-5xl">
-                {item.icon === "shopping-bag" && "🛍️"}
-                {item.icon === "store" && "🏪"}
-                {item.icon === "bike" && "🚲"}
-              </div>
-              <h3 className="text-2xl md:text-3xl font-bold text-white text-center mb-3 md:mb-4">
-                {item.title}
-              </h3>
-              <p className="text-gray-300 text-center text-base md:text-lg leading-relaxed">
-                {item.desc}
-              </p>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Why Near2Door Section */}
-      <div className="w-full max-w-7xl mx-auto mb-12 md:mb-16 px-6">
-        <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-center text-lime-400 mb-8 md:mb-12">
-          Why Near2Door
-        </h2>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-10">
-          {[
-            {
-              emoji: "🤝",
-              title: "Trusted By Locals",
-              desc: "We’re not a faceless delivery app. Near2Door is built with your Goa neighborhood in mind — your trusted local shops, your friendly delivery partners, your people.",
-            },
-            {
-              emoji: "💳",
-              title: "Cash & UPI — Both Welcomed",
-              desc: "Whether you want to pay by UPI or prefer handing over cash at your door, Near2Door gives you the freedom to choose, supporting Goa's diverse payment preferences.",
-            },
-            {
-              emoji: "📍",
-              title: "Community-Powered Delivery",
-              desc: "Our delivery agents are your neighbors in Goa — local youth and students looking to earn while serving their own community.",
-            },
-            {
-              emoji: "⭐",
-              title: "We Care About Community",
-              desc: "Near2Door isn’t just a service, it’s a movement to connect better and support local businesses in Goa. We empower small businesses and young individuals to thrive together.",
-            },
-          ].map((item, idx) => (
-            <div
-              key={idx}
-              className="bg-slate-800 p-8 md:p-10 rounded-3xl shadow-xl ring-1 ring-lime-500/20 flex flex-col sm:flex-row items-start space-y-4 sm:space-y-0 sm:space-x-6 transition-transform duration-300 hover:scale-[1.02] hover:shadow-2xl"
-            >
-              <div className="flex-shrink-0 text-lime-400 text-4xl sm:text-5xl mx-auto sm:mx-0">
-                {item.emoji}
-              </div>
-              <div className="text-center sm:text-left">
-                <h3 className="text-xl md:text-2xl font-bold text-white mb-2">
-                  {item.title}
-                </h3>
-                <p className="text-gray-300 leading-relaxed text-base md:text-lg">
-                  {item.desc}
-                </p>
+        <div className="mt-16 grid gap-12 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] lg:items-center">
+          <div className="space-y-8">
+            <div>
+              <div className="mb-4 text-xs font-black uppercase tracking-[0.35em] text-lime-400">Why Near2Door</div>
+              <div className="space-y-4">
+                {[
+                  { title: '15-min delivery', desc: 'From your trusted local shops' },
+                  { title: 'Community first', desc: 'Local shopkeepers and neighborhood agents' },
+                  { title: 'Simple ordering', desc: 'Groceries and tools in one app' },
+                ].map((item) => (
+                  <div key={item.title} className="border-l-2 border-lime-400 pl-4">
+                    <h3 className="text-lg font-bold text-lime-300">{item.title}</h3>
+                    <p className="mt-1 text-gray-400">{item.desc}</p>
+                  </div>
+                ))}
               </div>
             </div>
-          ))}
-        </div>
-      </div>
 
-      {/* Final Call-to-Action */}
-      <div className="w-full max-w-7xl mx-auto text-center py-12 md:py-16 bg-gradient-to-r from-lime-500 to-lime-700 rounded-3xl shadow-2xl ring-4 ring-lime-500/30 relative overflow-hidden px-6">
-        <div className="relative z-10">
-          <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-white mb-4 md:mb-6">
-            Ready to Get Started?
-          </h2>
-          <p className="text-base sm:text-lg text-lime-100 max-w-3xl mx-auto mb-6 md:mb-8 font-light">
-            Join our growing community of local shoppers, shops, and delivery
-            agents in Goa today.
-          </p>
-          <button
-            onClick={() => onNavigate("signup")}
-            className="px-10 py-4 md:px-12 md:py-5 bg-white text-lime-700 font-bold text-lg md:text-xl rounded-full shadow-2xl transition-all duration-300 transform hover:bg-gray-100 hover:-translate-y-1 hover:scale-105 focus:outline-none focus:ring-4 focus:ring-white"
-          >
-            Sign Up Now
-          </button>
+            <div>
+              <div className="mb-4 text-xs font-black uppercase tracking-[0.35em] text-lime-400">Quick Categories</div>
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
+                {quickCategories.map((category) => (
+                  <button
+                    key={category}
+                    className="rounded-2xl bg-slate-800 px-4 py-3 text-sm font-semibold text-gray-200 transition hover:bg-lime-400 hover:text-slate-900"
+                  >
+                    {category}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="grid w-full gap-6 md:grid-cols-2">
+            <div className="rounded-[1.75rem] border border-slate-700 bg-slate-800 p-6 shadow-lg">
+              <div className="mb-6 flex items-center justify-between">
+                <h3 className="text-lg font-black text-lime-400">Fresh Produce</h3>
+                <span className="rounded-full bg-lime-400/20 px-3 py-1 text-xs font-bold text-lime-300">Live</span>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                {produceItems.map((item) => (
+                  <div key={item.title} className="rounded-2xl bg-slate-700 p-4 text-center">
+                    <div className="text-4xl">{item.emoji}</div>
+                    <div className="mt-3 text-sm font-bold text-white">{item.title}</div>
+                    <div className="mt-1 text-xs text-gray-400">{item.note}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="rounded-[1.75rem] border border-slate-700 bg-slate-800 p-6 shadow-lg">
+              <div className="mb-6 flex items-center justify-between">
+                <h3 className="text-lg font-black text-sky-400">Hardware Tools</h3>
+                <span className="rounded-full bg-sky-400/20 px-3 py-1 text-xs font-bold text-sky-300">Electric Blue</span>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                {toolItems.map((tool) => (
+                  <div key={tool.title} className="rounded-2xl bg-slate-700 p-4 text-center">
+                    <div className="text-4xl">{tool.icon}</div>
+                    <div className="mt-3 text-sm font-bold text-white">{tool.title}</div>
+                    <div className="mt-1 text-xs text-gray-400">{tool.detail}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
+      </section>
+
+      <section className="mx-auto max-w-7xl px-4 pb-20 pt-12 sm:px-6 sm:pb-24 sm:pt-16 lg:px-8 lg:pb-28 lg:pt-20">
+        <div className="rounded-[2rem] border border-lime-400/20 bg-slate-800 p-8 text-center shadow-lg sm:p-12">
+          <h2 className="text-4xl font-black text-lime-400 sm:text-5xl">Ready to join the movement?</h2>
+          <p className="mt-4 text-lg text-gray-300">Support local. Order smart. Deliver together.</p>
+          <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:justify-center sm:gap-6">
+            <button
+              onClick={() => onNavigate('signup')}
+              className="rounded-full bg-lime-400 px-8 py-4 text-lg font-bold text-slate-900 shadow-2xl transition hover:-translate-y-1 hover:bg-lime-300"
+            >
+              Start Now
+            </button>
+            <button
+              onClick={() => onNavigate('about')}
+              className="rounded-full border-2 border-lime-400 bg-transparent px-8 py-4 text-lg font-bold text-lime-400 transition hover:-translate-y-1 hover:bg-lime-400/10"
+            >
+              Our Story
+            </button>
+          </div>
+        </div>
+      </section>
     </div>
   );
 };
